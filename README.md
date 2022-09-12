@@ -6,13 +6,13 @@ Things I did/learn as a part of Google Summer of Code in 2022 at PostgreSQL.
 
 The current repository doesn't contain any README and installation guide. So I have added installation steps and other required files.
 
-- Added `description/README.md` for project description and contribution guidelines
+- Added `README.md` for project description and contribution guidelines
 
-- Added `utility/requirements.txt`, which contains the project's dependencies
+- Added `requirements.txt`, which contains the project's dependencies
 
-- Added installation guide `installation/dev_install.md`
+- Added installation guide [dev_install.md](dev_install.md)
 
-- Created separate `utility/table.sql` file for database initialization
+- Created separate [table.sql](table.sql) file for database initialization
 
 - NOTE:- You need to download mbox for `pgsql-hackers` list and include it in the `loader` directory for sample data ([Download link](https://www.postgresql.org/list/pgsql-hackers/mbox/pgsql-hackers.202207))
 
