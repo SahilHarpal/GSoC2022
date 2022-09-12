@@ -1,0 +1,34 @@
+From a2396b20d2a0a42407b8b99862eaca376eed239e Mon Sep 17 00:00:00 2001
+From: unknown <santosh.2@iitj.ac.in>
+Date: Sun, 11 Sep 2022 23:49:58 +0530
+Subject: [PATCH] Updated your account nav option
+
+---
+ django/archives/mailarchives/templates/base.html | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/django/archives/mailarchives/templates/base.html b/django/archives/mailarchives/templates/base.html
+index 98343c3..88c1c9b 100644
+--- a/django/archives/mailarchives/templates/base.html
++++ b/django/archives/mailarchives/templates/base.html
+@@ -52,7 +52,16 @@
+                 <li class="nav-item p-2"><a href="/developer/" title="Developers">Developers</a></li>
+                 <li class="nav-item p-2"><a href="/support/" title="Support">Support</a></li>
+                 <li class="nav-item p-2"><a href="/about/donate/" title="Donate">Donate</a></li>
+-                <li class="nav-item p-2"><a href="/account/" title="Your account">Your account</a></li>
++                <!-- 
++                  The below snippet displays dynamic text, either login or username, along with a profile icon.
++                  If a user is logged in, show the username
++                  Else display text login 
++                -->
++                {% if user.is_authenticated %}
++                  <li class="nav-item p-2"><a href="/account/" title="Your account"><i class="fa fa-user-circle" aria-hidden="true"></i> {{ user.get_username }}</a></li>
++                {% else %}
++                  <li class="nav-item p-2"><a href="/account/" title="Login"><i class="fa fa-user-circle" aria-hidden="true"></i> Login</a></li>
++                {% endif %}
+               </ul>
+              <form role="search" method="get" action="{{ PGWEB_ADDRESS }}/search/">
+                <div class="input-group">
+-- 
+2.26.2.windows.1
+

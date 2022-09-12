@@ -1,0 +1,171 @@
+From 5affb699ccd2fd4447e014867db502c425b7f630 Mon Sep 17 00:00:00 2001
+From: unknown <santosh.2@iitj.ac.in>
+Date: Thu, 8 Sep 2022 19:04:22 +0530
+Subject: [PATCH] Updated month list page
+
+---
+ .../mailarchives/templates/monthlist.html     | 61 +++++++++++++------
+ django/media/css/main.css                     | 45 ++++++++++++++
+ django/media/js/main.js                       | 20 ++++++
+ 3 files changed, 108 insertions(+), 18 deletions(-)
+
+diff --git a/django/archives/mailarchives/templates/monthlist.html b/django/archives/mailarchives/templates/monthlist.html
+index f255b5c..2c8f947 100644
+--- a/django/archives/mailarchives/templates/monthlist.html
++++ b/django/archives/mailarchives/templates/monthlist.html
+@@ -10,24 +10,49 @@
+ {%include "searchform.html" %}
+ 
+ <h2>View Archives</h2>
++<div class="col-sm-5 pl-0">
++  <div class="input-group">
++    <div class="input-group-prepend">
++      <div class="input-group-text"><i class="fas fa-calendar-alt"></i></div>
++    </div>
++    <input type="text" id="MonthlistSearch" class="form-control" onkeyup="monthlistSearch()" placeholder="Enter year">
++  </div>
++</div>
+ 
+ {%regroup months by year as yearmonth %}
+-<table class="table table-striped table-sm thread-list">
+-  <tbody>
+-    {% for year in yearmonth %}
+-      <tr>
+-        <th colspan="3">{{ year.grouper }}</th>
+-      </tr>
+-      {% for month in year.list %}
+-        <tr>
+-          <th scope="row">
+-            <a href="/list/{{list.listname}}/{{month.year}}-{{month.month|stringformat:"02d"}}/">{{month.date|date:"F Y"}}</a>
+-          </th>
+-          <td><a href="/list/{{list.listname}}/{{month.year}}-{{month.month|stringformat:"02d"}}/">View Archives</a></td>
+-          <td><a href="/list/{{list.listname}}/mbox/{{list.listname}}.{{month.year}}{{month.month|stringformat:"02d"}}">Download mbox</a></td>
+-        </tr>
+-      {% endfor %}
+-    {% endfor %}
+-  </tbody>
+-</table>
++{% for year in yearmonth %}
++<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
++    <div class="panel panel-default">
++      <div class="panel-heading" role="tab" id="heading{{ year.grouper }}">
++        <h4 class="panel-title">
++        <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse{{ year.grouper }}" aria-expanded="false" aria-controls="collapse{{ year.grouper }}">
++          {{ year.grouper }}
++        </a>
++      </h4>
++      </div>
++      <div id="collapse{{ year.grouper }}" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="heading{{ year.grouper }}">
++        <div>
++          <table id="monthlist-table">
++            <thead>
++              <tr id="monthlist-table-header">
++                <th id="monthlist-table-header-month" class="list-table-header-text" data-field="monthname">Month</th>
++                <th id="monthlist-table-header-action" class="list-table-header-text" data-field="viewarchives">View Archives</th>
++                <th id="monthlist-table-header-action" class="list-table-header-text" data-field="mbox">Download mbox</th>
++              </tr>
++            </thead>
++            <tbody>
++              {% for month in year.list %}
++              <tr>
++                <th id="monthlist-table-data-th" scope="row"><a href="/list/{{list.listname}}/{{month.year}}-{{month.month|stringformat:"02d"}}/">{{month.date|date:"F Y"}}</a></th>
++                <td id="monthlist-table-data-td" ><a id="monthlist-table-data-td-a" href="/list/{{list.listname}}/{{month.year}}-{{month.month|stringformat:"02d"}}/"><i id="monthlist-table-data-i" class="fa fa-archive" aria-hidden="true"></i></a></td>
++                <td id="monthlist-table-data-td" ><a id="monthlist-table-data-td-a" href="/list/{{list.listname}}/mbox/{{list.listname}}.{{month.year}}{{month.month|stringformat:"02d"}}"><i id="monthlist-table-data-i" class="fa fa-download" aria-hidden="true"></i></a></td>
++              </tr>
++              {%endfor%}
++            </tbody>
++          </table>
++        </div>
++      </div>
++    </div>
++  </div>
++{% endfor %}
+ {%endblock%}
+diff --git a/django/media/css/main.css b/django/media/css/main.css
+index 9c183d7..b8acb29 100644
+--- a/django/media/css/main.css
++++ b/django/media/css/main.css
+@@ -958,6 +958,51 @@ th.formfieldnamecontainer {
+     padding: 0;
+ }
+ 
++/** Month List */
++
++#monthlist-table {
++  width: 100%;
++}
++
++#monthlist-table-header {
++  background: #336791;
++}
++
++#monthlist-table-header-month {
++  padding: 5px;
++  font-weight: 600;
++  color: #ffffff !important;
++}
++
++#monthlist-table-header-action {
++  padding: 5px;
++  font-weight: 600;
++  color: #ffffff !important;
++  text-align: center;
++}
++
++#monthlist-table-data-th {
++  padding: 5px;
++  border-bottom: 1px solid #ddd;
++}
++
++#monthlist-table-data-td {
++  padding: 5px;
++  text-align: center;
++  border-bottom: 1px solid #ddd;
++}
++
++#monthlist-table-data-i {
++  border-radius: 5px;
++  padding: 3px;
++  border: 1.5px solid #ffffff;
++} 
++
++#monthlist-table-data-i:hover {
++  color: #cf2263 !important;
++  border: 1.5px solid #840032;
++}
++
+ /** Messages */
+ 
+ h3.messages {
+diff --git a/django/media/js/main.js b/django/media/js/main.js
+index 6e54b30..1832310 100644
+--- a/django/media/js/main.js
++++ b/django/media/js/main.js
+@@ -30,3 +30,23 @@ _gaq.push(['_trackPageview']);
+     ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+ })();
++
++/*
++*
++Monthlist search function
++*/
++
++function monthlistSearch() {
++    $('.panel-collapse.in')
++        .collapse('hide');
++    var input = document.getElementById("MonthlistSearch");
++    var filter = input.value.toLowerCase();
++    var nodes = document.getElementsByClassName('panel-title');
++    for (i = 0; i < nodes.length; i++) {
++        if (nodes[i].innerText.toLowerCase().includes(filter)) {
++            nodes[i].style.display = "block";
++        } else {
++            nodes[i].style.display = "none";
++        }
++    }
++}
+\ No newline at end of file
+-- 
+2.26.2.windows.1
+

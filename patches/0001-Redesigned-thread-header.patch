@@ -1,0 +1,360 @@
+From 938b7bf117ebab0da3c5b182c24ccd14c91e0317 Mon Sep 17 00:00:00 2001
+From: unknown <santosh.2@iitj.ac.in>
+Date: Sat, 10 Sep 2022 21:03:32 +0530
+Subject: [PATCH] Redesigned thread header
+
+---
+ .../mailarchives/templates/_message.html      |  69 ++++++++----
+ .../mailarchives/templatetags/pgfilters.py    |  26 +++++
+ django/media/css/main.css                     | 106 +++++++++++++++++-
+ django/media/js/main.js                       |  63 ++++++++++-
+ 4 files changed, 238 insertions(+), 26 deletions(-)
+
+diff --git a/django/archives/mailarchives/templates/_message.html b/django/archives/mailarchives/templates/_message.html
+index c90a80a..4383b37 100644
+--- a/django/archives/mailarchives/templates/_message.html
++++ b/django/archives/mailarchives/templates/_message.html
+@@ -2,54 +2,75 @@
+ 
+ <table class="table-sm table-responsive message-header" style="border-bottom: 0.05em solid #E7EAE8; margin-bottom: 1em;">
+  <tr>
+-  <th scope="row" style="width: 10%">From:</th>
+-  <td>{{msg.mailfrom|hidemail}}</td>
++  <th scope="row" style="width: 10%"><i class="fa fa-angle-double-right" aria-hidden="true"></i> From:</th>
++  <td><span class="more_info">{{msg.mailfrom|nameonly}}<div class="popup">{{msg.mailfrom|emailonly|hidemail}}</div></span></td>
+  </tr>
+  <tr>
+-  <th scope="row">To:</th>
+-  <td>{{msg.to|hidemail}}</td>
++  <th scope="row"><i class="fa fa-angle-double-right" aria-hidden="true"></i> To:</th>
++  <td>
++    {% for item in msg.to|splitusers %}
++      <span class="more_info">{{item|nameonly}}<div class="popup">{{item|emailonly|hidemail}} </div></span>
++    {% endfor %}
+  </tr>
+ {%if msg.cc%}
+  <tr>
+-  <th scope="row">Cc:</th>
+-  <td>{{msg.cc|hidemail}}</td>
++  <th scope="row"><i class="fa fa-angle-double-right" aria-hidden="true"></i> Cc:</th>
++  <td>
++    {% for item in msg.cc|splitusers %}
++      <span class="more_info">{{item|nameonly}}<div class="popup">{{item|emailonly|hidemail}} </div></span>
++    {% endfor %}
++  </td>
+  </tr>
+ {%endif%}
+  <tr>
+-  <th scope="row">Subject:</th>
++  <th scope="row"><i class="fa fa-angle-double-right" aria-hidden="true"></i> Subject:</th>
+   <td>{%if not msg.hiddenstatus%}{{msg.subject}}{%endif%}</td>
+  </tr>
+  <tr>
+-  <th scope="row">Date:</th>
++  <th scope="row"><i class="fa fa-angle-double-right" aria-hidden="true"></i> Date:</th>
+   <td>{{msg.printdate}}</td>
+  </tr>
+  <tr>
+-  <th scope="row">Message-ID:</th>
+-  <td><a href="/message-id/{{msg.messageid|urlencode}}">{{msg.messageid}}</a></td>
++  <th scope="row" style="vertical-align: middle;"><i class="fa fa-angle-double-right" aria-hidden="true"></i> Message-ID:</th>
++  <td>
++    <div class="messageTooltip">
++    <button onclick="copyMessageID()" onmouseout="outCopyMessageID()">
++      <span class="message-tooltip-text" id="messageidTooltip">Copy to clipboard</span>
++      <i class="fa fa-clipboard" aria-hidden="true"></i>
++    </button>  
++    </div>
++  </td>
+  </tr>
+  <tr>
+-   <th class="align-middle" scope="row">Views:</th>
+-   <td>
+-     <a href="/message-id/raw/{{msg.messageid|urlencode}}">Raw Message</a> |
+-     <a href="/message-id/flat/{{msg.messageid|urlencode}}">Whole Thread</a> |
+-     <a href="/message-id/mbox/{{msg.messageid|urlencode}}">Download mbox</a>
+-{%if allow_resend %}| <a href="/message-id/resend/{{msg.messageid|urlencode}}">Resend email</a>{%endif%}
++  <th colspan="2" style="padding: 5px 0px 10px 20px">
++    <a href="/message-id/{{msg.messageid|urlencode}}" id="messageId-text">{{msg.messageid}}</a>
++  </th>
++ </tr>
++ <tr>
++   <th class="align-middle" scope="row"><i class="fa fa-angle-double-right" aria-hidden="true"></i> Views:</th>
++   <td style="display: inline-flex; flex-wrap: wrap;">
++     <a class="message-view-button" href="/message-id/raw/{{msg.messageid|urlencode}}">Raw Message</a>
++     <a class="message-view-button" href="/message-id/flat/{{msg.messageid|urlencode}}">Whole Thread</a>
++     <a class="message-view-button" href="/message-id/mbox/{{msg.messageid|urlencode}}">Download mbox</a>
++{%if allow_resend %} <a class="message-view-button" href="/message-id/resend/{{msg.messageid|urlencode}}">Resend email</a>{%endif%}
+    </td>
+  </tr>
+  {% if not show_all %}
+    <tr>
+-    <th class="align-middle" scope="row">Thread:</th>
+-    <td>
+-     <select id="thread_select" class="custom-select">
+-  {%for m in threadstruct%}{%if m.id%}<option value="{{m.messageid|urlencode}}"{%if m.id == msg.id%} selected="selected"{%endif%}>{{m.indent|safe}}{{m.printdate}} from {{m.mailfrom|hidemail}}{% if m.hasattachment %}	&#x1f4ce;{% endif %}</option>{%endif%}
+-  {%endfor%}
+-     </select>
+-    </td>
++    <th class="align-middle" scope="row"><i class="fa fa-angle-double-right" aria-hidden="true"></i> Thread:</th>
++   </tr>
++   <tr>
++    <th colspan="2" style="padding: 5px 0px 10px 20px">
++      <select id="thread_select" class="custom-select">
++        {%for m in threadstruct%}{%if m.id%}<option value="{{m.messageid|urlencode}}"{%if m.id == msg.id%} selected="selected"{%endif%}>{{m.indent|safe}}{{m.printdate}} from {{m.mailfrom|nameonly}} {% if m.hasattachment %}	<div style="margin-inline: 3px;"> &#x1f4ce;</div>{% endif %}</option>{%endif%}
++        {%endfor%}
++      </select>
++     </th>
+    </tr>
+   {% endif %}
+   {% if lists %}
+     <tr>
+-      <th scope="row">Lists:</th>
++      <th scope="row"><i class="fa fa-angle-double-right" aria-hidden="true"></i> Lists:</th>
+       <td>
+         {%for l in lists %}
+           <span class="listname"><a href="/list/{{l.listname}}/since/{{msg.shortdate}}">{{l.listname}}</a></span>
+diff --git a/django/archives/mailarchives/templatetags/pgfilters.py b/django/archives/mailarchives/templatetags/pgfilters.py
+index 2f1d630..16bb5cc 100644
+--- a/django/archives/mailarchives/templatetags/pgfilters.py
++++ b/django/archives/mailarchives/templatetags/pgfilters.py
+@@ -53,6 +53,32 @@ def nameonly(value):
+     return email.split('@')[0]
+ 
+ 
++@register.filter(name='emailonly')
++@stringfilter
++def emailonly(value):
++    (name, email) = parseaddr(value)
++    return email
++
++# Function to split comma separate user details (Username and Email) from the input string
++# eg. Nathan Bossart <nathandbossart@gmail.com>, "houzj.fnst@fujitsu.com" <houzj.fnst@fujitsu.com>, "Bossart, Nathan" <bossartn@amazon.com>, Stephen Frost <sfrost@snowman.net>, PostgreSQL-development <pgsql-hackers@postgresql.org>
++# Use case:
++#   Message thread contains many user details in the header part (From, To, CC) 
++#   To save space and increase readability, displaying username only and providing email on hover would be a good option
++@register.filter(name='splitusers')
++@stringfilter
++def splitusers(value):
++    match = re.findall(r'<[\w.+-]+@[\w-]+\.[\w.-]+>', value)
++    res = []
++    for m in match:
++        i = value.find(m) - 1
++        temp = ""
++        while i >= 0 and not (value[i]==',' and value[i-1]=='>'):
++            temp = value[i]+temp
++            i-=1
++        res.append(temp + " " + m)
++    return res
++
++
+ @register.filter(name='md5')
+ @stringfilter
+ def md5(value):
+diff --git a/django/media/css/main.css b/django/media/css/main.css
+index 280a9c1..2947af8 100644
+--- a/django/media/css/main.css
++++ b/django/media/css/main.css
+@@ -979,6 +979,7 @@ input[type=checkbox] {
+ /* For the thread viewer, keep the width inline with the parent element */
+ #thread_select.custom-select {
+   width: auto;
++  padding: 3px 30px 3px 3px;
+ }
+ 
+ th.formfieldnamecontainer {
+@@ -1084,14 +1085,117 @@ h3.messages {
+ }
+ 
+ .message-header th, .message-header td {
+-    padding: 0;
++  font-size: 11px;
++  min-width: 100px;
++  vertical-align: top;
++  padding: 5px 0px 5px 0px;
++ }
++
++ .message-header th i {
++  margin-left: 0px;
+  }
+ 
++ .message-header .more_info {
++  margin-inline-end: 3px;
++  border-bottom: 1px dotted #000;
++  position: relative;
++  cursor: pointer;
++  white-space: nowrap;
++}
++
++.message-header .more_info:hover {
++  color: #840032;
++  background-color: #ededed;
++}
++
++.message-header .more_info .popup {
++  position: absolute;
++  top: 15px; /*must overlap parent element otherwise pop-up doesn't stay open when rolloing over '*/
++  color: white;
++  background: #676767;
++  border: 1px solid #ccc;
++  padding: 8px;
++  left: 0;
++  max-width: 240px;
++  min-width: 180px;
++  z-index: 100;
++  display: none;
++}
++
++.message-header .messageTooltip {
++  position: relative;
++  display: inline-block;
++  margin-left: 3px;
++  font-size: 10px;
++}
++
++.message-header .messageTooltip .message-tooltip-text {
++  visibility: hidden;
++  width: 140px;
++  font-size: 12px;
++  background-color: #555;
++  color: #fff;
++  text-align: center;
++  border-radius: 6px;
++  padding: 5px;
++  position: absolute;
++  z-index: 1;
++  bottom: 150%;
++  left: 50%;
++  margin-left: -75px;
++  opacity: 0;
++  transition: opacity 0.3s;
++}
++
++.message-header .messageTooltip button {
++  padding: 0px;
++  border: 1px solid #b2b2b2;
++  border-radius: 3px;
++}
++
++.message-header .messageTooltip .message-tooltip-text::after {
++  content: "";
++  position: absolute;
++  top: 100%;
++  left: 50%;
++  margin-left: 0px;
++  border-width: 5px;
++  border-style: solid;
++  border-color: #555 transparent transparent transparent;
++}
++
++.message-header .messageTooltip button:hover {
++  cursor: pointer;
++  background-color: #336791;
++}
++
++.message-header .messageTooltip:hover i {
++  color: #ffff !important;
++}
++
++.message-header .messageTooltip:hover .message-tooltip-text {
++  visibility: visible;
++  opacity: 1;
++}
++
+ .message-header select {
+     height: auto;
+     padding: 0;
+ }
+ 
++.message-header .message-view-button {
++  color: #326690 !important;
++  padding: 5px;
++  border: 1px solid #9e9d9d;
++  border-radius: 5px;
++  margin: 3px;
++}
++
++.message-header .message-view-button:hover {
++  color: #ffffff !important;
++  background: #326690;
++}
++
+ .message-content {
+     display: inline-block;
+     font-family: monospace, monospace;
+diff --git a/django/media/js/main.js b/django/media/js/main.js
+index 1832310..676c1e3 100644
+--- a/django/media/js/main.js
++++ b/django/media/js/main.js
+@@ -49,4 +49,65 @@ function monthlistSearch() {
+             nodes[i].style.display = "none";
+         }
+     }
+-}
+\ No newline at end of file
++}
++
++
++/**
++* Copy message if to clipboard
++*/
++function copyMessageID() {
++    var copyText = document.getElementById("messageId-text");
++    navigator.clipboard.writeText(copyText.innerHTML);
++    
++    var tooltip = document.getElementById("messageidTooltip");
++    tooltip.innerHTML = "Copied!";
++}
++  
++function outCopyMessageID() {
++    var tooltip = document.getElementById("messageidTooltip");
++    tooltip.innerHTML = "Copy to clipboard";
++}
++
++/**
++ * Show email id on hover
++*/
++$(document).ready(function () {
++    //init pop-ups
++    $(".popup").attr("data-close", false);
++
++    //click on pop-up opener.
++    //pop-up is expected to be a child of opener
++    $(".more_info").click(function () {
++        var $title = $(this).find(".popup");
++        //open if not marked for closing
++        if ($title.attr("data-close") === "false") {
++            $title.show();
++        }
++        //reset popup         
++        $title.attr("data-close", false);
++    });
++
++    //mark pop-up for closing if clicked on
++    //close is initiated by document.mouseup, 
++    //marker will stop opener from re-opening it
++    $(".popup").click(function () {
++        $(this).attr("data-close",true);
++    });
++
++    //hide all pop-ups
++    $(document).mouseup(function () {
++        $(".popup").hide();
++    });
++
++    //show on rollover if mouse is used
++    $(".more_info").mouseenter(function () {
++        var $title = $(this).find(".popup");
++        $title.show();
++    });
++
++    //hide on roll-out
++    $(".more_info").mouseleave(function () {
++        var $title = $(this).find(".popup");
++        $title.hide();
++    });
++});
+\ No newline at end of file
+-- 
+2.26.2.windows.1
+

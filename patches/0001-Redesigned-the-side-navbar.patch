@@ -1,0 +1,150 @@
+From 74f2ace87e387d1a5c07754e2b9231c655410206 Mon Sep 17 00:00:00 2001
+From: unknown <santosh.2@iitj.ac.in>
+Date: Thu, 8 Sep 2022 10:02:04 +0530
+Subject: [PATCH] Redesigned the side navbar
+
+---
+ .../archives/mailarchives/templates/page.html | 20 +++----
+ django/media/css/main.css                     | 55 +++++++++++++++++--
+ 2 files changed, 61 insertions(+), 14 deletions(-)
+
+diff --git a/django/archives/mailarchives/templates/page.html b/django/archives/mailarchives/templates/page.html
+index fed0163..686a88c 100644
+--- a/django/archives/mailarchives/templates/page.html
++++ b/django/archives/mailarchives/templates/page.html
+@@ -2,24 +2,24 @@
+ {%block layoutblock%}
+ <div class="container-fluid margin archive">
+   <div class="row">
+-    <div class="col-lg-2">
++    <div class="col-xl-2 col-lg-3 col-md-4">
+       <div id="pgSideWrap">
+        <div id="pgSideNav">
+          <h2>Quick Links</h2>
+          <ul>
+-            <li><a href="/community/">Community</a></li>
+-            <li><a href="/community/contributors/">Contributors</a></li>
+-            <li><a href="/list/">Mailing Lists</a></li>
+-            <li><a href="/community/irc/">IRC</a></li>
+-            <li><a href="https://postgres-slack.herokuapp.com/">Slack</a></li>
+-            <li><a href="/community/user-groups/">Local User Groups</a></li>
+-            <li><a href="/about/events/">Events</a></li>
+-            <li class="last-child"><a href="/community/international/">International Sites</a></li>
++            <li><a href="/community/"><i class="fa fa-users"></i>Community</a></li>
++            <li><a href="/community/contributors/"><i class="fa fa-code" aria-hidden="true"></i>Contributors</a></li>
++            <li><a href="/list/"><i class="fa fa-envelope" aria-hidden="true"></i>Mailing Lists</a></li>
++            <li><a href="/community/irc/"><i class="fas fa-comments"></i>IRC</a></li>
++            <li><a href="https://postgres-slack.herokuapp.com/"><i class="fab fa-slack"></i>Slack</a></li>
++            <li><a href="/community/user-groups/"><i class="fa fa-paper-plane" aria-hidden="true"></i>Local User Groups</a></li>
++            <li><a href="/about/events/"><i class="fas fa-calendar-alt"></i> Events</a></li>
++            <li class="last-child"><a href="/community/international/"><i class="fa fa-globe" aria-hidden="true"></i>International Sites</a></li>
+          </ul>
+        </div>
+       </div> <!-- pgSideWrap -->
+     </div>
+-    <div class="col-lg-10">
++    <div class="col-xl-10 col-lg-9 col-md-8">
+       <div id="pgContentWrap">
+         {%block contents%}{%endblock%}
+       </div> <!-- pgContentWrap -->
+diff --git a/django/media/css/main.css b/django/media/css/main.css
+index 340a65e..2fa6505 100644
+--- a/django/media/css/main.css
++++ b/django/media/css/main.css
+@@ -132,7 +132,7 @@ a:hover, a:active {
+ }
+ 
+ b, strong {
+-	font-weight: 600;
++	  font-weight: 600;
+   	color: #474747 !important;
+ }
+ 
+@@ -580,6 +580,10 @@ ul.actions {
+     margin-bottom: 0;
+ }
+ 
++.nav-item > a {
++  font-weight: 400;
++}
++
+ .logo {
+     height: 2rem;
+     margin-left: 5px;
+@@ -593,13 +597,40 @@ ul.actions {
+ 
+ /* #SIDEBAR UL STYLING */
+ 
++
+ #pgSideNav {
+-    padding: 1em;
++  padding: 1em;
++  background: #f8f9fa;
++  border-radius: 7px;
++  box-shadow: 0px 5px 15px rgb(0 0 0 / 20%);
++}
++
++#pgSideNav a {
++  color: #336791;
++  font-weight: normal;
++  padding-left: 1em;
++  padding-top: 0.5em;
++  padding-bottom: 0.5em;
++  display: block;
+ }
+ 
+ #pgSideNav ul {
+-    list-style-type: circle;
+-    padding-left: 1.3em;
++  list-style-type: none;
++  padding-left: 0em;
++}
++
++#pgSideNav a i {
++  font-size: 1em;
++  width: 1.8em;
++}
++
++#pgSideNav ul li:hover {
++  background: #336791;
++  border-radius: 5px !important;
++}
++
++#pgSideNav ul li:hover a {
++  color: #ffffff;
+ }
+ 
+ /* #PGCONTENTWRAP */
+@@ -888,6 +919,10 @@ h1.subject {
+     padding: 1em 0;
+   }
+ 
++  #pgSideNav h2 {
++    padding-left: 1em;
++  }
++
+   #pgSideNav ul {
+     padding: 0;
+     margin: 1em 0 0 1em;
+@@ -907,6 +942,18 @@ h1.subject {
+ 
+ }
+ 
++@media (min-width: 768px) {
++  /** SIDE NAVBAR */
++  #pgSideNav {
++    position: fixed;
++    z-index: 1;
++  }
++
++  #pgSideNav a {
++    padding-right: 1em;
++  }
++}
++
+ @media (min-width: 576px) {
+     /** NAVBAR */
+     .nav-item > a {
+-- 
+2.26.2.windows.1
+
